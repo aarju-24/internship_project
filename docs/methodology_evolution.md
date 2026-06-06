@@ -1,302 +1,110 @@
 # Methodology Evolution
 
-## Version 1: Initial Asset Universe Selection
-
-### Original Approach
-
-Select stocks manually based on familiarity and perceived importance.
-
-### Problem
-
-Selection process was subjective and difficult to justify.
-
-### Why Problematic
-
-* Potential researcher bias.
-* Difficult to reproduce.
-* May overlook important assets.
-
-### Revised Approach
-
-Use a systematic stock universe construction process.
-
-### Impact
-
-Improved objectivity and reproducibility.
+This document records the key design decisions made during the project and the reasoning behind each revision. It is intended to show the mentor and any reviewer that every methodological choice was deliberate rather than accidental.
 
 ---
 
-## Version 2: S&P 500 Ordering Approach
+## V1 → V2: Universe Construction
 
-### Original Approach
+**Original:** Stocks selected manually based on familiarity.
 
-Select the first 100 companies from the S&P 500 list.
+**Problem:** Subjective selection introduces researcher bias and makes the universe difficult to justify or reproduce.
 
-### Problem
+**Change:** Programmatically extract all S&P 500 constituents from Wikipedia, then rank by market capitalisation via the Yahoo Finance API. The top 93 companies by market cap form the stock universe.
 
-The ordering of S&P 500 constituents does not necessarily reflect company size or liquidity.
-
-### Why Problematic
-
-* Universe definition becomes arbitrary.
-* Large-cap representation is inconsistent.
-
-### Revised Approach
-
-Select companies based on market capitalization.
-
-### Impact
-
-Created a more representative universe of highly liquid US equities.
+**Effect:** Universe construction is now reproducible and auditable. Any reviewer can re-run the selection cell and get the same result.
 
 ---
 
-## Version 3: Current Top Market-Cap Universe
+## V2 → V3: S&P 500 Ordering vs. Market-Cap Ranking
 
-### Original Concern
+**Original:** Selected the first 100 companies from the Wikipedia S&P 500 list.
 
-Using today's largest companies with historical data introduces:
+**Problem:** The Wikipedia table is not ordered by company size. Picking the first 100 rows produces an arbitrary and inconsistent set of companies.
 
-* Survivorship bias
-* Look-ahead bias
+**Change:** Sort all S&P 500 constituents by `marketCap` descending, take the top 100. After data quality filtering, the final count is 93 stocks.
 
-### Discussion
-
-The concern was discussed during mentor review.
-
-### Mentor Guidance
-
-* Continue using current market leaders.
-* Focus on liquid assets available today.
-* Prioritize methodology validation over survivorship-bias correction.
-
-### Decision
-
-Retain the current top market-cap universe.
-
-### Impact
-
-Avoided restarting the project and maintained practical relevance.
+**Effect:** The universe reliably represents the most liquid and most actively traded US equities, which is a necessary condition for pairs trading research.
 
 ---
 
-## Version 4: Combined Stock and ETF Analysis
+## V3 Discussion: Survivorship Bias
 
-### Original Approach
+**Concern raised:** Using current market leaders with historical data means the universe is defined by companies that have already succeeded — companies that failed or were delisted during the sample period are not represented.
 
-Analyze stocks and ETFs together.
+**Mentor guidance:** For an internship-level validation project, continue using current market leaders. The priority is methodology correctness and practical relevance. The bias is documented as a known limitation.
 
-### Problem
-
-Different asset structures produced difficult-to-interpret results.
-
-### Why Problematic
-
-* ETFs automatically rebalance.
-* Stocks represent individual businesses.
-* Correlation structures differ significantly.
-
-### Revised Approach
-
-Analyze stocks and ETFs separately.
-
-### Impact
-
-Improved interpretation and cleaner comparisons.
+**Decision:** Retain the current market-cap universe. Survivorship bias is listed in the assumptions register.
 
 ---
 
-## Version 5: Static Correlation Analysis
+## V4: Stocks and ETFs Separated
 
-### Original Approach
+**Original:** Stocks and ETFs were analysed together in a combined correlation matrix.
 
-Use a single correlation matrix covering the entire historical period.
+**Problem:** ETFs automatically rebalance and hold diversified baskets of assets. Their correlation structure is fundamentally different from individual stocks. Mixed analysis produced results that were difficult to interpret.
 
-### Problem
-
-Assumes relationships remain constant through time.
-
-### Why Problematic
-
-* Market regimes change.
-* Sector dynamics evolve.
-* Historical relationships may no longer be relevant.
-
-### Mentor Feedback
-
-Long-term correlations may not represent current market behaviour.
-
-### Revised Approach
-
-Add yearly correlation analysis.
-
-### Impact
-
-Allowed comparison of relationships across different market environments.
+**Change:** Stocks and ETFs are treated as separate universes throughout the EDA, correlation analysis, and cointegration testing. Cross-asset comparisons are added as a separate section.
 
 ---
 
-## Version 6: Correlation Stability Analysis
+## V5: Static → Yearly Correlation Analysis
 
-### Original Approach
+**Original:** A single correlation matrix over the full historical period.
 
-Use yearly correlations only.
+**Problem:** A single static figure assumes the relationship is constant. Market regimes change — correlations that held during 2018–2020 may not hold in 2023–2025.
 
-### Problem
+**Mentor feedback:** Long-term static correlations do not represent current market behaviour. Add time-varying analysis.
 
-Yearly snapshots provide limited information about relationship dynamics.
-
-### Why Problematic
-
-Relationships may strengthen or weaken within a year.
-
-### Revised Approach
-
-Implement rolling correlation analysis.
-
-### Impact
-
-Enabled evaluation of correlation stability through time.
+**Change:** Added a yearly correlation analysis loop that computes the top correlated pairs for each calendar year, enabling comparison across market environments (pre-COVID, COVID, rate cycle, AI expansion).
 
 ---
 
-## Version 7: Pair Selection Methodology
+## V6: Yearly → Rolling Correlation Analysis
 
-### Original Approach
+**Original:** Yearly correlation snapshots only.
 
-Potentially run cointegration tests on all possible pairs.
+**Problem:** Yearly snapshots still miss intra-year regime changes. A pair could appear stable year-over-year while actually weakening significantly mid-year.
 
-### Problem
+**Change:** Added a 252-day rolling correlation analysis over the full historical sample. This allows continuous monitoring of relationship stability rather than annual snapshots.
 
-Large number of pair combinations.
-
-Example:
-
-* 93 stocks
-* 4,278 possible stock pairs
-
-### Why Problematic
-
-* Computationally inefficient.
-* Increased risk of false positives.
-* Difficult to interpret results.
-
-### Mentor Feedback
-
-Validate methodology before scaling.
-
-### Revised Approach
-
-Use correlation analysis as a screening stage.
-
-Pipeline:
-
-Data Collection
-→ EDA
-→ Correlation Analysis
-→ Rolling Correlation
-→ Candidate Selection
-→ Cointegration Testing
-
-### Impact
-
-More efficient and statistically defensible workflow.
+**Implementation note:** An initial attempt used a 252-day rolling window applied to a 252-observation recent-data subset. This produced only one valid rolling observation. The rolling analysis was moved to the full historical dataset, which produces a meaningful time series of rolling correlations.
 
 ---
 
-## Version 8: Candidate Pair Selection
+## V7: Pair Universe Reduction
 
-### Original Approach
+**Original:** Run cointegration tests on all possible pairs.
 
-Purely statistical pair selection.
+**Problem:** 93 stocks produce 4,278 unique pairs. Running the full pipeline on all pairs without prior screening would be computationally wasteful and statistically problematic — with 4,278 tests at α = 0.05, roughly 214 false positives are expected by chance alone.
 
-### Problem
+**Mentor feedback:** Validate the methodology on a small number of well-justified pairs before scaling.
 
-High correlation alone does not guarantee meaningful relationships.
+**Change:** Correlation analysis is used as a screening stage. Only pairs that pass a high correlation threshold and demonstrate rolling stability proceed to cointegration testing. Pipeline:
 
-### Why Problematic
-
-Relationships may lack economic justification.
-
-### Revised Approach
-
-Select pairs using:
-
-* High correlation
-* Industry similarity
-* Business similarity
-* Correlation stability
-
-### Candidate Pairs
-
-* MA – V
-* HD – LOW
-* AMAT – LRCX
-
-### Impact
-
-Improved economic interpretability.
+```
+Data Collection → EDA → Correlation Screening → Rolling Stability →
+Candidate Selection → Cointegration Testing
+```
 
 ---
 
-## Version 9: Cointegration Testing Strategy
+## V8: Economic Justification for Pair Selection
 
-### Original Approach
+**Original:** Pairs selected on correlation coefficient alone.
 
-Run Engle-Granger on all candidate pairs immediately.
+**Problem:** High correlation is a necessary but not sufficient condition for cointegration. Without economic justification, a high-correlation pair may simply share a common factor temporarily.
 
-### Problem
+**Change:** Final candidate pairs must satisfy three criteria: (1) high 1-year Pearson correlation, (2) similar sector and business model, (3) stable rolling correlation across multiple years. Same-company pairs (e.g. GOOG / GOOGL) are removed by a hard-coded blocklist and secondary name-matching filter.
 
-Implementation correctness had not yet been validated.
-
-### Why Problematic
-
-Errors could scale across hundreds or thousands of tests.
-
-### Revised Approach
-
-Validate Engle-Granger methodology on a small number of highly relevant pairs first.
-
-### Current Validation Pairs
-
-* MA – V
-* HD – LOW
-* AMAT – LRCX
-
-### Impact
-
-Improved reliability and easier debugging.
+**Final candidates:** MA/V, HD/LOW, AMAT/LRCX.
 
 ---
 
-## Planned Future Evolution
+## V9: Validation Before Scaling
 
-### Rolling Cointegration
+**Original:** Intended to run Engle-Granger on all candidate pairs immediately.
 
-Current Status:
+**Problem:** An implementation error in the pipeline would silently propagate across hundreds of tests.
 
-Planned
-
-Purpose:
-
-Evaluate whether cointegration relationships remain stable through time.
-
-### Pair Trading Framework
-
-Current Status:
-
-Planned
-
-Purpose:
-
-Generate and evaluate statistical arbitrage signals.
-
-### Backtesting
-
-Current Status:
-
-Planned
-
-Purpose:
-
-Assess real-world performance of the methodology.
+**Change:** Validate the full workflow on three well-understood pairs first. Only after the implementation is confirmed correct — including cross-validation with `statsmodels.coint()` — will it be applied to the full universe.

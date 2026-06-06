@@ -1,327 +1,66 @@
 # Research Log
 
-## Phase 1: Project Planning and Universe Selection
+---
 
-### Date
+## Phase 1 — Project Planning and Universe Construction
+**18 May – 24 May 2026**
 
-18 May 2026 – 24 May 2026
+Defined project scope and built the asset universe. Initial manual stock selection was replaced with a systematic market-cap ranked extraction from the S&P 500 Wikipedia constituent table. Survivorship bias concerns were raised regarding the use of current market leaders with historical data. After mentor review, the decision was made to retain the current universe, document the limitation, and focus on methodology correctness.
 
-### Objective
-
-Define project scope and construct a suitable asset universe for correlation, cointegration, and pair trading research.
-
-### Work Completed
-
-* Explored pair trading and statistical arbitrage concepts.
-* Investigated correlation and cointegration methodologies.
-* Evaluated stock universe construction approaches.
-* Collected historical market data using Yahoo Finance.
-* Constructed stock and ETF universes for analysis.
-
-### Problems Encountered
-
-#### Universe Selection
-
-Initial universe construction relied on S&P 500 ordering rather than market capitalization.
-
-#### Bias Concerns
-
-Using current top companies with historical data raised concerns regarding:
-
-* Survivorship bias
-* Look-ahead bias
-
-### Mentor Feedback
-
-* Current top market-cap companies are acceptable.
-* Focus on liquid and currently tradeable assets.
-* Do not restart the project because of survivorship concerns.
-
-### Decisions Made
-
-* Use current top market-cap US stocks.
-* Retain historical data for exploratory analysis.
-* Document survivorship bias as a project limitation.
-
-### Outcome
-
-Final asset universe established:
-
-* 93 Stocks
-* 15 ETFs
+**Outcome:** Final universe established — 93 stocks, 15 ETFs.
 
 ---
 
-## Phase 2: Data Collection and Data Preparation
+## Phase 2 — Data Collection and Preprocessing
+**24 May – 30 May 2026**
 
-### Date
+Downloaded adjusted close prices via `yfinance` for all 108 assets from 2018-01-01 to present. Handled the Yahoo Finance multi-ticker column structure, patched missing AXP and BRK-B data (these were not included correctly in the batch download and required individual downloads). Applied a 5% missing-value threshold to remove sparse assets, followed by forward-fill for remaining gaps. Generated derived datasets: daily returns, log returns, normalised prices, and 30-day rolling volatility. Sector metadata extracted from S&P 500 Wikipedia table.
 
-24 May 2026 – 30 May 2026
-
-### Objective
-
-Build a clean and consistent dataset suitable for statistical analysis.
-
-### Work Completed
-
-* Downloaded adjusted close prices.
-
-* Validated data availability.
-
-* Performed missing value checks.
-
-* Generated:
-
-  * Daily returns
-  * Log returns
-  * Normalized prices
-  * Rolling volatility metrics
-
-* Conducted dataset validation checks.
-
-### Problems Encountered
-
-* Yahoo Finance sector metadata retrieval produced incomplete results.
-* Some assets required additional validation due to missing metadata.
-
-### Decisions Made
-
-* Use adjusted close prices.
-* Use daily frequency.
-* Store stocks and ETFs separately.
-
-### Outcome
-
-Created a clean dataset for EDA and correlation analysis.
+**Outcome:** Clean dataset saved to `data/cleaned/` and `data/processed/`.
 
 ---
 
-## Phase 3: Exploratory Data Analysis
+## Phase 3 — Exploratory Data Analysis
+**30 May – 03 June 2026**
 
-### Date
+Analysed return behaviour, volatility, and distributional properties across the full universe. Key findings: return distributions are non-normal with heavy tails; technology and growth stocks exhibit meaningfully higher volatility than defensive sectors; several assets show extreme single-day observations consistent with earnings events. Geometric annualised returns were computed to avoid the overstatement inherent in arithmetic annualisation.
 
-30 May 2026 – 03 June 2026
-
-### Objective
-
-Understand return behaviour, volatility characteristics, and overall dataset structure.
-
-### Work Completed
-
-* Price trend analysis.
-* Normalized performance comparison.
-* Return statistics.
-* Log-return statistics.
-* Outlier analysis using Z-scores.
-* Volatility ranking analysis.
-* Rolling volatility analysis.
-* Return distribution analysis.
-* Annualized return calculations.
-
-### Key Findings
-
-* Return distributions are non-normal.
-* Several assets exhibit heavy tails and extreme observations.
-* Volatility varies substantially across assets.
-* Technology and growth-oriented stocks exhibit higher volatility profiles.
-
-### Outcome
-
-Established a statistical understanding of the asset universe before pair selection.
+**Outcome:** Statistical baseline established for the full universe before pair selection.
 
 ---
 
-## Phase 4: Correlation Analysis and Pair Selection
+## Phase 4 — Correlation Analysis and Pair Selection
+**03 June – 04 June 2026**
 
-### Date
+Computed 1-year Pearson correlation matrices for stocks and ETFs separately. Top stock pairs by correlation: HD/LOW (0.882), AMAT/LRCX (0.862), MA/V (0.856). Same-company pairs (GOOG/GOOGL and similar) were found to dominate the rankings; a filtering function was implemented to remove them using a hard-coded blocklist and secondary name-matching via Yahoo Finance `longName`. Mentor feedback confirmed that correlation alone is insufficient — stability analysis required before candidate selection.
 
-03 June 2026 – 04 June 2026
-
-### Objective
-
-Identify candidate pairs for future cointegration testing.
-
-### Work Completed
-
-* Stock correlation matrix analysis.
-* ETF correlation matrix analysis.
-* Top correlated stock pair identification.
-* Top correlated ETF pair identification.
-* Stock versus ETF comparison.
-
-### Key Findings
-
-#### Top Stock Pairs
-
-| Pair      | Correlation |
-| --------- | ----------- |
-| HD-LOW    | 0.882       |
-| STX-WDC   | 0.869       |
-| AMAT-LRCX | 0.862       |
-| MA-V      | 0.856       |
-| KLAC-LRCX | 0.850       |
-
-#### Top ETF Pairs
-
-| Pair    | Correlation |
-| ------- | ----------- |
-| SPY-QQQ | 0.948       |
-| QQQ-XLK | 0.946       |
-| SPY-XLK | 0.873       |
-
-### Problems Encountered
-
-#### Same-Company Pair Issue
-
-Examples:
-
-* GOOG-GOOGL
-* Similar share-class relationships
-
-These artificially inflated correlation rankings.
-
-### Solution
-
-Implemented filtering logic to remove same-company pairs from candidate selection.
-
-### Mentor Feedback
-
-* Correlation analysis alone is insufficient.
-* Relationships should be evaluated through time.
-* Stocks and ETFs should be analyzed separately.
-
-### Outcome
-
-Candidate pairs identified for further analysis.
+**Outcome:** Candidate pairs shortlisted pending rolling stability confirmation.
 
 ---
 
-## Phase 5: Correlation Stability Analysis
+## Phase 5 — Correlation Stability Analysis
+**04 June 2026**
 
-### Date
+Added yearly and rolling correlation analysis. Yearly loop showed that AMAT/LRCX, MA/V, and HD/LOW appeared consistently in the top pairs across multiple calendar years. Rolling 252-day analysis confirmed that these relationships, while not constant, remain above average correlation throughout the full sample with no extended periods of breakdown. An implementation error was identified and corrected: the rolling analysis was initially applied to a 252-row subset with a 252-day window, producing only a single valid observation. Moving the rolling analysis to the full history resolved this.
 
-04 June 2026
-
-### Objective
-
-Evaluate whether highly correlated relationships remain stable through time.
-
-### Work Completed
-
-* Yearly correlation analysis.
-* Yearly top-pair analysis.
-* Rolling correlation analysis.
-* Correlation stability summaries.
-
-### Key Findings
-
-Persistent relationships identified:
-
-* AMAT-LRCX
-* KLAC-LRCX
-* AMAT-KLAC
-* MA-V
-* HD-LOW
-
-Rolling correlation analysis showed:
-
-* Correlations are not constant through time.
-* Relationships strengthen and weaken across market regimes.
-* Highly correlated pairs remain more stable than average pairs.
-
-### Problems Encountered
-
-#### Rolling Correlation Window Issue
-
-Using:
-
-* 252 observations
-* 252-day rolling window
-
-produced only a single rolling observation.
-
-### Solution
-
-Moved rolling analysis from recent datasets to full historical datasets.
-
-### Mentor Feedback
-
-* Static correlations are insufficient.
-* Add rolling correlation analysis.
-* Add yearly correlation analysis.
-
-### Outcome
-
-Correlation stability framework completed.
+**Outcome:** Three pairs confirmed as candidates for cointegration testing.
 
 ---
 
-## Phase 6: Engle-Granger Cointegration Validation
+## Phase 6 — Engle-Granger Cointegration Validation
+**Current**
 
-### Date
+Implementing the Engle-Granger two-step procedure on the three candidate pairs. OLS regression on log prices produces the hedge ratio and residual spread. ADF test (autolag=AIC) on the spread tests for stationarity. Results are cross-validated against `statsmodels.coint()`. All analytical logic is encapsulated in reusable functions. A batch runner (`run_cointegration_pipeline()`) is ready for Phase 7 scaling.
 
-Current Phase
-
-### Objective
-
-Validate Engle-Granger methodology before scaling to larger pair universes.
-
-### Candidate Pairs
-
-* MA-V
-* HD-LOW
-* AMAT-LRCX
-
-### Planned Workflow
-
-Correlation Analysis
-→ Candidate Selection
-→ Engle-Granger Cointegration
-→ Spread Construction
-→ ADF Testing
-→ Hedge Ratio Estimation
-→ Rolling Cointegration
-→ Backtesting
-
-### Current Status
-
-In Progress
-
-### Next Steps
-
-1. Validate Engle-Granger implementation.
-2. Construct spreads.
-3. Test spread stationarity.
-4. Estimate hedge ratios.
-5. Develop rolling cointegration framework.
-6. Evaluate pair stability.
-7. Prepare for strategy development.
+**Status:** In progress.
 
 ---
 
-# Current Project Status
+## Next Steps
 
-## Completed
-
-* Project Planning
-* Universe Selection
-* Data Collection
-* Data Cleaning
-* EDA
-* Volatility Analysis
-* Correlation Analysis
-* ETF Analysis
-* Yearly Correlation Analysis
-* Rolling Correlation Analysis
-* Candidate Pair Selection
-
-## In Progress
-
-* Engle-Granger Cointegration Validation
-
-## Planned
-
-* Rolling Cointegration
-* Pair Trading Signals
-* Backtesting
-* Performance Evaluation
+1. Complete cointegration validation on all three pairs
+2. Confirm implementation correctness via `coint()` cross-check
+3. Apply batch pipeline to full EDA top-pairs list (Phase 7)
+4. Develop rolling cointegration framework (rolling OLS, hedge ratio stability)
+5. Build signal generation with rolling z-score normalisation
+6. Evaluate pair suitability for backtesting

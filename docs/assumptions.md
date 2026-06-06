@@ -6,31 +6,13 @@
 
 The project focuses on identifying statistically related asset pairs using correlation analysis, Engle-Granger cointegration, and rolling cointegration as a foundation for future pair trading research.
 
-### Study Type
-
-This project is intended for:
-
-* Research
-* Methodology validation
-* Educational and internship purposes
-
-It is not intended as a live trading system.
-
 ---
 
 # Asset Universe Assumptions
 
 ## Stock Universe
 
-* Current top US large-cap companies by market capitalization.
-* Focus on highly liquid equities.
-* Total stocks analyzed: 93.
-
-### Assumption
-
-Current market leaders provide a relevant universe for contemporary pair trading research.
-
----
+* Current top 100 US large-cap companies by market capitalization.
 
 ## ETF Universe
 
@@ -57,8 +39,6 @@ Examples:
 
 Total ETFs analyzed: 15.
 
-### Assumption
-
 ETFs provide useful benchmarks and relationship comparisons against individual stocks.
 
 ---
@@ -68,10 +48,6 @@ ETFs provide useful benchmarks and relationship comparisons against individual s
 ## Data Source
 
 Yahoo Finance
-
-### Assumption
-
-Downloaded adjusted close prices are sufficiently accurate for internship-level research.
 
 ---
 
@@ -115,10 +91,6 @@ A multi-year period captures different market regimes and economic environments.
 
 ## Simple Returns
 
-[
-r_t = \frac{P_t - P_{t-1}}{P_{t-1}}
-]
-
 Used for:
 
 * Correlation analysis
@@ -127,11 +99,6 @@ Used for:
 ---
 
 ## Log Returns
-
-[
-\ln\left(\frac{P_t}{P_{t-1}}\right)
-]
-
 Used for:
 
 * Distribution analysis
