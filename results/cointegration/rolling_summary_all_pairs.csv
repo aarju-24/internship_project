@@ -1,0 +1,4 @@
+Pair,Windows (total),Cointegrated Windows %,Mean p-value,Median p-value,Mean β,β Std Dev,β Range,Cointegrated Quarters %
+MA / V,1868,26.9%,0.1524,0.1096,1.0083,0.2153,"[0.597, 1.416]",24.2%
+HD / LOW,1868,13.0%,0.3725,0.3647,0.7859,0.1742,"[0.416, 1.105]",21.2%
+AMAT / LRCX,1868,7.8%,0.3281,0.2299,0.9039,0.2361,"[0.299, 1.573]",18.2%
